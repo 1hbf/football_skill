@@ -20,6 +20,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # استخراج أسماء المهارات من المجلد
 def list_all_skills():
+    os.makedirs("videos/correct", exist_ok=True)
     return [d for d in os.listdir("videos/correct") if os.path.isdir(f"videos/correct/{d}")]
 
 # استخراج نقاط الجسم ومواقع الكرة من الفيديو
