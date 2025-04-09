@@ -7,7 +7,6 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from ai import run_model  # الدالة الرئيسية للتحليل
-
 app = FastAPI()
 
 # إعداد CORS
