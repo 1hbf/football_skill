@@ -6,10 +6,11 @@ import os
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-from ai import run_model
+from ai import run_model  # الدالة الرئيسية للتحليل
 
 app = FastAPI()
 
+# إعداد CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,11 +19,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 def root():
     return {"message": "API is live"}
-
 
 @app.post("/analyze")
 async def analyze(
@@ -35,16 +34,16 @@ async def analyze(
     position: str = Form(...)
 ):
     try:
-        print("🚀 تحليل بدأ")
+        # حفظ الفيديو مؤقتًا
         temp_video_path = f"temp_{file.filename}"
         with open(temp_video_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        print("📁 تم حفظ الفيديو مؤقتًا")
 
+        # تشغيل النموذج في Thread منفصل
         loop = asyncio.get_event_loop()
         with ThreadPoolExecutor() as pool:
             result = await loop.run_in_executor(pool, lambda: run_model(
-                temp_video_path,
+                player_video_path=temp_video_path,
                 full_name=full_name,
                 weight=weight,
                 height=height,
@@ -52,11 +51,11 @@ async def analyze(
                 training=training,
                 position=position
             ))
-        print("✅ تم تحليل الفيديو")
 
+        # حذف الملف المؤقت
         os.remove(temp_video_path)
+
         return JSONResponse(content={"result": result})
 
     except Exception as e:
-        print("🔥 خطأ أثناء التحليل:", str(e))
         return JSONResponse(status_code=500, content={"error": str(e)})
