@@ -5,9 +5,7 @@ import torch
 import mediapipe as mp
 from ultralytics import YOLO
 import google.generativeai as genai
-import sqlite3
 import glob
-from database import save_player_data
 
 # إعداد الموديلات
 model = YOLO('yolov8n.pt')
@@ -80,7 +78,7 @@ def run_model(player_video_path, full_name, weight, height, diet, training, posi
         avg_correct_ball = sum([len(extract_keypoints(video)[1]) for video in correct_videos]) / len(correct_videos) if correct_videos else 0
         avg_incorrect_ball = sum([len(extract_keypoints(video)[1]) for video in incorrect_videos]) / len(incorrect_videos) if incorrect_videos else 0
 
-        # تعديل الـ prompt ليحتوي فقط على المعدلات المتوسطة بدلاً من تفاصيل كثيرة
+        # إعداد الرسالة للنموذج
         instruction_prompt = f"""You are evaluating a football skill: "{skill}".
 Correct examples average ball detections: {avg_correct_ball}
 Incorrect examples average ball detections: {avg_incorrect_ball}
@@ -95,27 +93,28 @@ Please respond in Arabic with a score between 0 and 1, explain the reasoning in 
         try:
             score = float(text.split("score")[1].split()[0])
         except:
-            score = 0.5  # في حال ما قدر يستخرج السكور
+            score = 0.5  # في حال عدم القدرة على الاستخراج
 
         if score > best_similarity_score:
             best_similarity_score = score
             best_match = skill
             best_reasoning = text
 
-    # الحفظ في قاعدة البيانات بعد التقييم
-    save_player_data(
-        full_name=full_name,
-        weight=weight,
-        height=height,
-        diet=diet,
-        training=training,
-        position=position,
-        video_path=player_video_path,
-        evaluation_result=best_reasoning,
-        source="منصة",
-        report_path=None,
-        stats_path=None
-    )
+    # ❌ تم تعطيل الحفظ في قاعدة البيانات مؤقتًا لعرض المشروع فقط
+    # from database import save_player_data
+    # save_player_data(
+    #     full_name=full_name,
+    #     weight=weight,
+    #     height=height,
+    #     diet=diet,
+    #     training=training,
+    #     position=position,
+    #     video_path=player_video_path,
+    #     evaluation_result=best_reasoning,
+    #     source="منصة",
+    #     report_path=None,
+    #     stats_path=None
+    # )
 
     return {
         "skill_detected": best_match,
