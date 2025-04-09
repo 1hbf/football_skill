@@ -22,6 +22,8 @@ app.add_middleware(
 def root():
     return {"message": "API is live"}
 
+import traceback
+
 @app.post("/analyze")
 async def analyze(
     file: UploadFile = File(...),
@@ -33,16 +35,14 @@ async def analyze(
     position: str = Form(...)
 ):
     try:
-        # حفظ الفيديو مؤقتًا
         temp_video_path = f"temp_{file.filename}"
         with open(temp_video_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # تشغيل النموذج في Thread منفصل
         loop = asyncio.get_event_loop()
         with ThreadPoolExecutor() as pool:
             result = await loop.run_in_executor(pool, lambda: run_model(
-                player_video_path=temp_video_path,
+                temp_video_path,
                 full_name=full_name,
                 weight=weight,
                 height=height,
@@ -51,10 +51,10 @@ async def analyze(
                 position=position
             ))
 
-        # حذف الملف المؤقت
         os.remove(temp_video_path)
-
         return JSONResponse(content={"result": result})
 
     except Exception as e:
+        print("🔥 خطأ غير متوقع:")
+        traceback.print_exc()  # 🟢 هذا يطبع الخطأ بالتفصيل في اللوج
         return JSONResponse(status_code=500, content={"error": str(e)})
